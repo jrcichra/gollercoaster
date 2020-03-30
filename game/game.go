@@ -57,30 +57,29 @@ func (g *Game) Run() {
 		var l level.Level
 		g.currentLevel = &l
 		batch := l.Spawn()
-		batch.Clear()
-		g.render()
-		batch.Draw(g.window)
 		// g.render()
 		last := time.Now()
+		redraw := true
 		for !g.window.Closed() {
 			dt := time.Since(last).Seconds()
 			last = time.Now()
-			g.window.Clear(color.Black)
-			batch.Clear()
+
 			if g.window.Pressed(pixelgl.KeyLeft) || g.window.Pressed(pixelgl.KeyA) {
 				g.CamPos.X -= g.CamSpeed * dt / g.CamZoom
+				redraw = true
 			}
 			if g.window.Pressed(pixelgl.KeyRight) || g.window.Pressed(pixelgl.KeyD) {
 				g.CamPos.X += g.CamSpeed * dt / g.CamZoom
+				redraw = true
 			}
 			if g.window.Pressed(pixelgl.KeyDown) || g.window.Pressed(pixelgl.KeyS) {
 				g.CamPos.Y -= g.CamSpeed * dt / g.CamZoom
+				redraw = true
 			}
 			if g.window.Pressed(pixelgl.KeyUp) || g.window.Pressed(pixelgl.KeyW) {
 				g.CamPos.Y += g.CamSpeed * dt / g.CamZoom
+				redraw = true
 			}
-
-			//TODO: Trying to get scroll where your cursor is working. Works except for zoom compensation
 
 			// if g.window.MouseScroll().Y > 0 {
 			// 	g.CamPos = g.CamPos.Sub(g.window.Bounds().Center().Sub(g.window.MousePosition()))
@@ -95,8 +94,13 @@ func (g *Game) Run() {
 			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
 
 			g.window.SetMatrix(cam)
-			g.render()
-			batch.Draw(g.window)
+			if redraw {
+				redraw = false
+				g.window.Clear(color.Black)
+				batch.Clear()
+				g.render()
+				batch.Draw(g.window)
+			}
 
 			g.window.Update()
 			frames++
