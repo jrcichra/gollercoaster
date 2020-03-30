@@ -1,7 +1,7 @@
 package game
 
 import (
-	"time"
+	"image/color"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -24,9 +24,9 @@ type Game struct {
 func (g *Game) Run() {
 	var err error
 	g.Name = "gollercoaster"
-	g.windowWidth = 800
-	g.windowHeight = 800
-	g.offset = pixel.V(400, 325)
+	g.windowWidth = 1920
+	g.windowHeight = 1080
+	g.offset = pixel.V(-800, -825)
 	g.tileSize = 64
 
 	pixelgl.Run(func() {
@@ -45,11 +45,12 @@ func (g *Game) Run() {
 		l.Spawn()
 		g.currentLevel = &l
 
-		g.render()
+		// g.render()
 
 		for !g.window.Closed() {
-			l.Spawn()
-			time.Sleep(100 * time.Millisecond)
+			// l.Spawn()
+			// time.Sleep(100 * time.Millisecond)
+			g.window.Clear(color.Black)
 			g.render()
 			g.window.Update()
 		}
@@ -67,7 +68,7 @@ func (g *Game) render() {
 			isoCoords := g.cartesianToIso(pixel.V(float64(x), float64(y)))
 			mat := pixel.IM.Moved(g.offset.Add(isoCoords))
 			// Not really needed, just put to show bigger blocks
-			mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(.5, .5))
+			mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(.1, .1))
 			g.currentLevel.Level[x][y].Draw(g.window, mat)
 		}
 	}
