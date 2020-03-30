@@ -1,6 +1,7 @@
 package spriteset
 
 import (
+	"github.com/faiface/pixel"
 	"github.com/jrcichra/gollercoaster/sprite"
 	"github.com/jrcichra/gollercoaster/textureloader"
 )
@@ -14,9 +15,9 @@ type SpriteSet struct {
 }
 
 //Load - loads all the sprites defined in the SpriteSet
-func (s *SpriteSet) Load() {
+func (s *SpriteSet) Load() *pixel.Batch {
 	var t textureloader.TextureLoader
-	err := t.Open("castle.png")
+	batch, err := t.Open("castle.png")
 	if err != nil {
 		panic(err)
 	}
@@ -29,4 +30,7 @@ func (s *SpriteSet) Load() {
 	var bigTable sprite.Sprite
 	bigTable.Sprite = t.GetTexture(64*3, 128, 64*2, 192)
 	s.BigTable = &bigTable
+
+	//Return the batch we should write to
+	return batch
 }

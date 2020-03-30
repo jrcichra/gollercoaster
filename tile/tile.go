@@ -9,6 +9,7 @@ import (
 //Tile - basic tile object (made up of many sprites)
 type Tile struct {
 	sprites []*sprite.Sprite
+	Batch   *pixel.Batch //Batch this tile writes to
 }
 
 //Append - put a new sprite on this tile (on top)
@@ -21,6 +22,6 @@ func (t *Tile) Draw(win *pixelgl.Window, mat pixel.Matrix) {
 	//To draw a tile, you need to render the sprites in order from furthest to closest
 	//Here I'm assuming 0 is furthest and N is closest
 	for _, s := range t.sprites {
-		s.Sprite.Draw(win, mat)
+		s.Sprite.Draw(t.Batch, mat)
 	}
 }

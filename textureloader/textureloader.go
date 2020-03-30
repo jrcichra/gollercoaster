@@ -16,18 +16,18 @@ type TextureLoader struct {
 }
 
 //Open - open's a file
-func (t *TextureLoader) Open(path string) error {
+func (t *TextureLoader) Open(path string) (*pixel.Batch, error) {
 	var err error
 	t.file, err = os.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img, _, err := image.Decode(t.file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	t.picture = pixel.PictureDataFromImage(img)
-	return nil
+	return pixel.NewBatch(&pixel.TrianglesData{}, t.picture), nil
 }
 
 //GetTexture - returns a sprite from the coordinates on the texture
