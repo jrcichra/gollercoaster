@@ -4,7 +4,8 @@ import (
 	"math/rand"
 	"time"
 
-	perlin "github.com/aquilax/go-perlin"
+	"github.com/faiface/pixel"
+
 	"github.com/jrcichra/gollercoaster/spriteset"
 	"github.com/jrcichra/gollercoaster/tile"
 )
@@ -16,11 +17,10 @@ type Level struct {
 }
 
 //Spawn - spawns a new level
-func (l *Level) Spawn() {
+func (l *Level) Spawn() *pixel.Batch {
 	//Load in the sprite set
 	var ss spriteset.SpriteSet
-	ss.Load()
-
+	batch := ss.Load()
 	// //Floor Tile
 	// var f tile.Tile
 	// f.Append(ss.Floor)
@@ -46,24 +46,29 @@ func (l *Level) Spawn() {
 
 	lvl := make([][]tile.Tile, 0) //start with a blank level
 
-	alpha := 2.
-	beta := 2.
-	n := 3
+	// alpha := 2.
+	// beta := 2.
+	// n := 3
 	rand.Seed(time.Now().UTC().UnixNano())
-	var seed = rand.Int63n(100)
-	p := perlin.NewPerlin(alpha, beta, n, seed)
+	// var seed = rand.Int63n(100)
+	// p := perlin.NewPerlin(alpha, beta, n, seed)
 
-	x := 20
-	y := 20
+	x := 200
+	y := 200
 
 	for i := 0; i < x; i++ {
 		row := make([]tile.Tile, 0, x)
 		for j := 0; j < y; j++ {
 			var t tile.Tile
-			val := p.Noise2D(float64(seed)/float64(i+1), float64(seed)/float64(j+1))
-			if val < 0 {
+			t.Batch = batch
+			// val := p.Noise2D(float64(seed)/float64(i+1), float64(seed)/float64(j+1))
+			val := rand.Float64()
+			if val < .3 {
 				//We'll say it's a wall
 				t.Append(ss.TallWall)
+			} else if val < .6 {
+				t.Append(ss.Floor)
+				t.Append(ss.BigTable)
 			} else {
 				//It's the floor
 				t.Append(ss.Floor)
@@ -73,5 +78,5 @@ func (l *Level) Spawn() {
 		lvl = append(lvl, row)
 	}
 	l.Level = lvl
-
+	return batch
 }
