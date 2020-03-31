@@ -93,6 +93,10 @@ func (g *Game) Run() {
 
 			// }
 
+			if g.window.MouseScroll().Y != 0 {
+				redraw = true
+			}
+
 			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
 
 			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
@@ -101,8 +105,6 @@ func (g *Game) Run() {
 			if redraw {
 				redraw = false
 				g.window.Clear(color.Black)
-				// batch.Clear()
-				// g.render()
 				batch.Draw(g.window)
 			}
 
