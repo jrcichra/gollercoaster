@@ -60,6 +60,10 @@ func (g *Game) Run() {
 		// g.render()
 		last := time.Now()
 		redraw := true
+		g.window.Clear(color.Black)
+		batch.Clear()
+		g.render()
+		batch.Draw(g.window)
 		for !g.window.Closed() {
 			dt := time.Since(last).Seconds()
 			last = time.Now()
@@ -97,8 +101,8 @@ func (g *Game) Run() {
 			if redraw {
 				redraw = false
 				g.window.Clear(color.Black)
-				batch.Clear()
-				g.render()
+				// batch.Clear()
+				// g.render()
 				batch.Draw(g.window)
 			}
 
