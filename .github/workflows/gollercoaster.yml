@@ -27,7 +27,9 @@ jobs:
 
     - name: Build for Linux
       if: runner.os != 'Windows'
-      run: go build -v .
+      run: |
+      sudo apt-get install -y libgl1-mesa-dev xorg-dev
+      go build -v .
 
     - name: Chocolatey
       if: runner.os == 'Windows'
