@@ -40,7 +40,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         msys2do pacman -Syu --noconfirm
-        msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
+        msys2do pacman -S --noconfirm --needed zip base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
         msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2do ls -l
