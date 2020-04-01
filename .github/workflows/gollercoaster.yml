@@ -33,7 +33,23 @@ jobs:
 
     - name: Chocolatey install msys2
       if: runner.os == 'Windows'
-      uses: crazy-max/ghaction-chocolatey@v1.0.2
-      with:
-        args: install msys2
-        
+      run: |
+        choco.exe install msys2
+        [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+        choco uninstall -y mingw
+        choco upgrade --no-progress -y msys2
+        export msys2='cmd //C RefreshEnv.cmd '
+        export msys2+='& set MSYS=winsymlinks:nativestrict '
+        export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
+        export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
+        export msys2+=" -msys2 -c "\"\$@"\" --"
+        $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-toolchain
+        taskkill //IM gpg-agent.exe //F
+        export PATH=/C/tools/msys64/mingw64/bin:$PATH
+        export MAKE=mingw32-make
+        $msys2 pacman --sync --clean --noconfirm
+        $msys2 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+        $msys2 echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
+        $msys2 pacman -S git
+        $msys2 echo 'export PATH=/c/Go/bin:$PATH' >> ~/.bashrc
+        $mingw64 go build
