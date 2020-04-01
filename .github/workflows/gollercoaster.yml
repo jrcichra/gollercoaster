@@ -41,3 +41,4 @@ jobs:
         msys2do pacman -Syu --noconfirm
         msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git go
         msys2do go build
+        
