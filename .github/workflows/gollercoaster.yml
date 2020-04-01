@@ -38,7 +38,5 @@ jobs:
     - name: Build for Windows
       if: runner.os == 'Windows'
       run: |
-        msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
-        msys2do echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
-        msys2do pacman -S --noconfirm git
+        msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/go build
