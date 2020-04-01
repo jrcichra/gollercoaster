@@ -26,11 +26,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build for macos
-    if: runner.os == 'MacOS'
-    run: |
-      go build -v .
-      zip -r gollercoaster-macos.zip castle.png gollercoaster
-
+      if: runner.os == 'MacOS'
+      run: |
+        go build -v .
+        zip -r gollercoaster-macos.zip castle.png gollercoaster
 
     - name: Build for Linux
       if: runner.os == 'Linux'
