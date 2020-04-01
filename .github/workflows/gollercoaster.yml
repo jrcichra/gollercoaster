@@ -31,12 +31,9 @@ jobs:
         sudo apt-get install -y libgl1-mesa-dev xorg-dev
         go build -v .
 
-    - name: Chocolatey
+    - name: Chocolatey install msys2
       if: runner.os == 'Windows'
       uses: crazy-max/ghaction-chocolatey@v1.0.2
-      
-    - name: Build for Windows
-      if: runner.os == 'Windows'
-      run: |
-        choco install msys2
+      with:
+        args: install msys2
         
