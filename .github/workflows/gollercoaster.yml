@@ -1,0 +1,40 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest,windows-latest]
+    steps:
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Build for Linux
+      if: runner.os != 'Windows'
+      run: go build -v .
+
+    - name: Chocolatey
+      if: runner.os == 'Windows'
+      uses: crazy-max/ghaction-chocolatey@v1.0.2
+      
+    - name: Build for Windows
+      if: runner.os == 'Windows'
+      run: |
+        choco install msys2
+        
