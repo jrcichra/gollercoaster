@@ -58,3 +58,4 @@ jobs:
         draft: "true"
         tag: "asdf"
         token: ${{ secrets.GITHUB_TOKEN }}
+        
