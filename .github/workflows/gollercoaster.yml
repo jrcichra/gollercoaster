@@ -30,6 +30,7 @@ jobs:
       run: |
         sudo apt-get install -y libgl1-mesa-dev xorg-dev
         go build -v .
+        zip gollercoaster-linux.zip castle.png gollercoaster
 
     - name: msys2 for Windows
       if: runner.os == 'Windows'
@@ -43,10 +44,11 @@ jobs:
         msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2do ls -l
+        msys2do zip gollercoaster-windows.zip castle.png gollercoaster.exe
     - name: Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "*"
+        artifacts: "*.zip"
         draft: "true"
         tag: "asdf"
         token: ${{ secrets.GITHUB_TOKEN }}
