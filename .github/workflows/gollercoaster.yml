@@ -31,24 +31,13 @@ jobs:
         sudo apt-get install -y libgl1-mesa-dev xorg-dev
         go build -v .
 
-    - name: Chocolatey install msys2
+       
+
+    - name: Build for Windows
       if: runner.os == 'Windows'
-      run: |
-        choco install msys2
-        choco uninstall -y mingw
-        choco upgrade --no-progress -y msys2
-        export msys2='cmd //C RefreshEnv.cmd '
-        export msys2+='& set MSYS=winsymlinks:nativestrict '
-        export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
-        export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
-        export msys2+=" -msys2 -c "\"\$@"\" --"
-        $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-toolchain
-        taskkill //IM gpg-agent.exe //F
-        export PATH=/C/tools/msys64/mingw64/bin:$PATH
-        export MAKE=mingw32-make
-        $msys2 pacman --sync --clean --noconfirm
-        $msys2 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
-        $msys2 echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
-        $msys2 pacman -S git
-        $msys2 echo 'export PATH=/c/hostedtoolcache/windows/go/1.14.1/x64:$PATH' >> ~/.bashrc
-        $mingw64 go build
+      uses: numworks/setup-msys2@v1
+    - run: msys2do pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+    - run: msys2do echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
+    - run: msys2do pacman -S git
+    - run: msys2do echo 'export PATH=/c/hostedtoolcache/windows/go/1.14.1/x64:$PATH' >> ~/.bashrc
+    - run: msys2do go build
