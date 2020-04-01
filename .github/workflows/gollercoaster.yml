@@ -44,9 +44,9 @@ jobs:
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2do ls -l
     - name: Release
-    uses: ncipollo/release-action@v1
-    with:
-      artifacts: "*"
-      draft: "true"
-      tag: "asdf"
-      token: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "*"
+        draft: "true"
+        tag: "asdf"
+        token: ${{ secrets.GITHUB_TOKEN }}
