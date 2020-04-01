@@ -38,5 +38,5 @@ jobs:
     - name: Build for Windows
       if: runner.os == 'Windows'
       run: |
-        msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git golang
+        msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git go
         msys2do go build
