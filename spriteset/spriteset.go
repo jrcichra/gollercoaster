@@ -6,12 +6,19 @@ import (
 	"github.com/jrcichra/gollercoaster/textureloader"
 )
 
+const (
+	TallWall      = iota
+	Floor         = iota
+	SmallTable    = iota
+	LeftAngleRoof = iota
+)
+
 //SpriteSet - collection of sprites that can be stacked in a tile
 type SpriteSet struct {
-	TallWall *sprite.Sprite
-	Floor    *sprite.Sprite
-	BigTable *sprite.Sprite
-	// SmallTable *pixel.Sprite
+	TallWall      *sprite.Sprite
+	Floor         *sprite.Sprite
+	SmallTable    *sprite.Sprite
+	LeftAngleRoof *sprite.Sprite
 }
 
 //Load - loads all the sprites defined in the SpriteSet
@@ -22,15 +29,17 @@ func (s *SpriteSet) Load() *pixel.Batch {
 		panic(err)
 	}
 	var tallWall sprite.Sprite
-	tallWall.Sprite = t.GetTexture(0, 448, 64, 512)
+	tallWall.Sprite = t.GetTexture(0, 0)
 	s.TallWall = &tallWall
 	var floor sprite.Sprite
-	floor.Sprite = t.GetTexture(0, 128, 64, 192)
+	floor.Sprite = t.GetTexture(0, 5)
 	s.Floor = &floor
-	var bigTable sprite.Sprite
-	bigTable.Sprite = t.GetTexture(64*3, 128, 64*2, 192)
-	s.BigTable = &bigTable
-
+	var smallTable sprite.Sprite
+	smallTable.Sprite = t.GetTexture(3, 5)
+	s.SmallTable = &smallTable
+	var leftAngleRoof sprite.Sprite
+	leftAngleRoof.Sprite = t.GetTexture(1, 1)
+	s.LeftAngleRoof = &leftAngleRoof
 	//Return the batch we should write to
 	return batch
 }

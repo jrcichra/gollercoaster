@@ -31,8 +31,9 @@ func (t *TextureLoader) Open(path string) (*pixel.Batch, error) {
 }
 
 //GetTexture - returns a sprite from the coordinates on the texture
-func (t *TextureLoader) GetTexture(minX, minY, maxX, maxY float64) *pixel.Sprite {
-	return pixel.NewSprite(t.picture, pixel.R(minX, minY, maxX, maxY))
+func (t *TextureLoader) GetTexture(x, y int) *pixel.Sprite {
+	//I personally want 0,0 to be in the top left corner, not the bottom left
+	return pixel.NewSprite(t.picture, pixel.R(float64(x*64), float64(512-((y+1)*64)), float64((x+1)*64), float64(512-(y*64))))
 }
 
 //Close - close the file for this texture loader

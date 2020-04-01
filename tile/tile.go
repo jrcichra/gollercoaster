@@ -12,9 +12,24 @@ type Tile struct {
 	Batch   *pixel.Batch //Batch this tile writes to
 }
 
-//Append - put a new sprite on this tile (on top)
-func (t *Tile) Append(s *sprite.Sprite) {
+//Push - push a new sprite on this tile
+func (t *Tile) Push(s *sprite.Sprite) {
 	t.sprites = append(t.sprites, s)
+}
+
+//Clear - clear a sprite's elements (make a new array and let go garbage collect the old one)
+func (t *Tile) Clear() {
+	t.sprites = make([]*sprite.Sprite, 0)
+}
+
+//Pop - Pops the last sprite off the tile - unexpected drawing behavior when you pop off the last
+func (t *Tile) Pop() *sprite.Sprite {
+	if len(t.sprites) == 1 {
+		return nil
+	}
+	s := t.sprites[len(t.sprites)-1]
+	t.sprites = t.sprites[:len(t.sprites)-1]
+	return s
 }
 
 //Draw - draws the tile

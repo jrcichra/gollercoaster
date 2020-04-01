@@ -1,7 +1,9 @@
 package level
 
 import (
+	"errors"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -13,13 +15,33 @@ import (
 //Level - all the things a level has to store
 type Level struct {
 	Name  string        // Name of your level
-	Level [][]tile.Tile //Map of the level (2D array of tiles)
+	level [][]tile.Tile //Map of the level (2D array of tiles)
+	SS    *spriteset.SpriteSet
+}
+
+//GetTile - get the attributes of this tile
+func (l *Level) GetTile(x, y int) (*tile.Tile, error) {
+	if x >= 0 && y >= 0 && x < l.GetWidth() && y < l.GetHeight() {
+		return &l.level[x][y], nil
+	}
+	return nil, errors.New("Tile index out of range: x=" + strconv.Itoa(x) + " y=" + strconv.Itoa(y))
+}
+
+//GetWidth - returns the width of the level
+func (l *Level) GetWidth() int {
+	return len(l.level)
+}
+
+//GetHeight - returns the height of the level
+func (l *Level) GetHeight() int {
+	return len(l.level[0])
 }
 
 //Spawn - spawns a new level
 func (l *Level) Spawn() *pixel.Batch {
 	//Load in the sprite set
 	var ss spriteset.SpriteSet
+	l.SS = &ss
 	batch := ss.Load()
 	// //Floor Tile
 	// var f tile.Tile
@@ -64,19 +86,18 @@ func (l *Level) Spawn() *pixel.Batch {
 			// val := p.Noise2D(float64(seed)/float64(i+1), float64(seed)/float64(j+1))
 			val := rand.Float64()
 			if val < .3 {
-				//We'll say it's a wall
-				t.Append(ss.TallWall)
+				t.Push(ss.TallWall)
 			} else if val < .6 {
-				t.Append(ss.Floor)
-				t.Append(ss.BigTable)
+				t.Push(ss.Floor)
+				t.Push(ss.SmallTable)
 			} else {
 				//It's the floor
-				t.Append(ss.Floor)
+				t.Push(ss.Floor)
 			}
 			row = append(row, t)
 		}
 		lvl = append(lvl, row)
 	}
-	l.Level = lvl
+	l.level = lvl
 	return batch
 }

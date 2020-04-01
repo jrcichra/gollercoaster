@@ -19,7 +19,6 @@ type Game struct {
 	window       *pixelgl.Window
 	offset       pixel.Vec
 	tileSize     float64
-	// tileMap      map[tile.Tile]int //map of tile objects that make up the game's tiles
 	currentLevel *level.Level //pointer to the currentLevel to render
 	CamPos       pixel.Vec
 	CamSpeed     float64
@@ -33,7 +32,7 @@ func (g *Game) Run() {
 	g.Name = "gollercoaster"
 	g.windowWidth = 1280
 	g.windowHeight = 720
-	g.offset = pixel.V(-400*14.5, -325*20)
+	g.offset = pixel.ZV
 	g.tileSize = 64
 	g.CamPos = pixel.ZV
 	g.CamSpeed = 500
@@ -41,7 +40,6 @@ func (g *Game) Run() {
 	g.CamZoomSpeed = 1.2
 	frames := 0
 	second := time.Tick(time.Second)
-	// last := time.Now()
 
 	pixelgl.Run(func() {
 		cfg := pixelgl.WindowConfig{
@@ -97,9 +95,28 @@ func (g *Game) Run() {
 				redraw = true
 			}
 
-			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
-
 			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
+
+			if g.window.JustPressed(pixelgl.MouseButton1) {
+				mousePos := g.isoToCartesian(cam.Unproject(g.window.MousePosition()))
+				tileX := int((mousePos.X + 1))
+				tileY := int((mousePos.Y + 1))
+				fmt.Println(tileX, tileY)
+				t, err := g.currentLevel.GetTile(tileX, tileY)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					t.Clear()
+					t.Push(g.currentLevel.SS.LeftAngleRoof)
+					isoCoords := g.cartesianToIso(pixel.V(float64(tileX), float64(tileY)))
+					mat := pixel.IM.Moved(g.offset.Add(isoCoords))
+					t.Draw(g.window, mat)
+					g.renderForward(tileX+1, tileY+1)
+					redraw = true
+				}
+			}
+
+			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
 
 			g.window.SetMatrix(cam)
 			if redraw {
@@ -126,17 +143,32 @@ func (g *Game) Run() {
 // closer to the viewer (see painter's algorithm). To do that, we need to process levelData in reverse order,
 // so its first row is rendered last, as OpenGL considers its origin to be in the lower left corner of the display.
 func (g *Game) render() {
-	for x := len(g.currentLevel.Level) - 1; x >= 0; x-- {
-		for y := len(g.currentLevel.Level[x]) - 1; y >= 0; y-- {
+	g.renderForward(g.currentLevel.GetWidth()-1, g.currentLevel.GetHeight()-1)
+}
+
+// Rerender everything that would be in front of the coordinate specified
+func (g *Game) renderForward(fx, fy int) {
+	for x := fx; x >= 0; x-- {
+		for y := fy; y >= 0; y-- {
 			isoCoords := g.cartesianToIso(pixel.V(float64(x), float64(y)))
 			mat := pixel.IM.Moved(g.offset.Add(isoCoords))
-			// Not really needed, just put to show bigger blocks
-			mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(.1, .1))
-			g.currentLevel.Level[x][y].Draw(g.window, mat)
+			// mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(1, 1))
+			t, err := g.currentLevel.GetTile(x, y)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				t.Draw(g.window, mat)
+			}
 		}
 	}
 }
 
 func (g *Game) cartesianToIso(pt pixel.Vec) pixel.Vec {
 	return pixel.V((pt.X-pt.Y)*(g.tileSize/2), (pt.X+pt.Y)*(g.tileSize/4))
+}
+
+func (g *Game) isoToCartesian(pt pixel.Vec) pixel.Vec {
+	// x := (pt.X/(g.tileSize/2) + pt.Y/(g.tileSize/4)) / 2
+	// y := (pt.Y/(g.tileSize/4) - (pt.X / (g.tileSize / 2))) / 2
+	return pixel.V((pt.X/(g.tileSize/2)+pt.Y/(g.tileSize/4))/2, (pt.Y/(g.tileSize/4)-(pt.X/(g.tileSize/2)))/2)
 }
