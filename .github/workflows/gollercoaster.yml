@@ -34,7 +34,7 @@ jobs:
     - name: Chocolatey install msys2
       if: runner.os == 'Windows'
       run: |
-        choco.exe install msys2
+        choco install msys2
         [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
         choco uninstall -y mingw
         choco upgrade --no-progress -y msys2
@@ -51,5 +51,5 @@ jobs:
         $msys2 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
         $msys2 echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
         $msys2 pacman -S git
-        $msys2 echo 'export PATH=/c/Go/bin:$PATH' >> ~/.bashrc
+        $msys2 echo 'export PATH=/c/hostedtoolcache/windows/go/1.14.1/x64:$PATH' >> ~/.bashrc
         $mingw64 go build
