@@ -31,13 +31,15 @@ jobs:
         sudo apt-get install -y libgl1-mesa-dev xorg-dev
         go build -v .
 
-       
+    - name: msys2 for Windows
+      if: runner.os == 'Windows'
+      uses: numworks/setup-msys2@v1
 
     - name: Build for Windows
       if: runner.os == 'Windows'
-      uses: numworks/setup-msys2@v1
-    - run: msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
-    - run: msys2do echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
-    - run: msys2do pacman -S --noconfirm git
-    - run: msys2do echo 'export PATH=/c/hostedtoolcache/windows/go/1.14.1/x64:$PATH' >> ~/.bashrc
-    - run: msys2do go build
+      run: |
+      msys2do pacman -S --noconfirm --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+      msys2do echo 'export PATH=/mingw64/bin:$PATH' >> ~/.bashrc
+      msys2do pacman -S --noconfirm git
+      msys2do echo 'export PATH=/c/hostedtoolcache/windows/go/1.14.1/x64:$PATH' >> ~/.bashrc
+      msys2do go build
