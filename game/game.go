@@ -94,14 +94,13 @@ func (g *Game) Run() {
 			if g.window.MouseScroll().Y != 0 {
 				redraw = true
 			}
-
+			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
 			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
 
 			if g.window.JustPressed(pixelgl.MouseButton1) {
 				mousePos := g.isoToCartesian(cam.Unproject(g.window.MousePosition()))
 				tileX := int((mousePos.X + 1))
 				tileY := int((mousePos.Y + 1))
-				fmt.Println(tileX, tileY)
 				t, err := g.currentLevel.GetTile(tileX, tileY)
 				if err != nil {
 					fmt.Println(err)
@@ -115,8 +114,6 @@ func (g *Game) Run() {
 					redraw = true
 				}
 			}
-
-			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
 
 			g.window.SetMatrix(cam)
 			if redraw {

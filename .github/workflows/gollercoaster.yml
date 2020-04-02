@@ -57,10 +57,9 @@ jobs:
         msys2do ls -l
         msys2do zip gollercoaster-windows.zip castle.png gollercoaster.exe
     - name: Release
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1.6.1
       with:
         artifacts: "*.zip"
-        draft: "true"
-        tag: "asdf"
+        allowUpdates: "true"
         token: ${{ secrets.GITHUB_TOKEN }}
         
