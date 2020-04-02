@@ -62,5 +62,6 @@ jobs:
         tag: ${{ github.run_number }}
         artifacts: "*.zip"
         allowUpdates: "true"
+        prerelease: "true"
         token: ${{ secrets.GITHUB_TOKEN }}
         
