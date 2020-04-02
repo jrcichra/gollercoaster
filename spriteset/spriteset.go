@@ -24,7 +24,7 @@ type SpriteSet struct {
 //Load - loads all the sprites defined in the SpriteSet
 func (s *SpriteSet) Load() *pixel.Batch {
 	var t textureloader.TextureLoader
-	batch, err := t.Open("castle.png")
+	batch, err := t.Open("textures.png")
 	if err != nil {
 		panic(err)
 	}
