@@ -34,10 +34,15 @@ jobs:
     - name: Build for Linux
       if: runner.os == 'Linux'
       run: |
+        git clone https://github.com/jrcichra/gh-actions-telegraf
+        bash gh-actions-telegraf/telegraf.sh
         sudo apt-get install -y libgl1-mesa-dev xorg-dev
         go build -v .
         zip gollercoaster-linux.zip castle.png gollercoaster
-
+      env:
+        INFLUX_URL: ${{ secrets.INFLUX_URL }}
+        INFLUX_USERNAME: ${{ secrets.INFLUX_USERNAME }}
+        INFLUX_PASSWORD: ${{ secrets.INFLUX_PASSWORD }}
     - name: msys2 for Windows
       if: runner.os == 'Windows'
       uses: numworks/setup-msys2@v1
