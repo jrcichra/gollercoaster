@@ -59,6 +59,7 @@ jobs:
     - name: Release
       uses: ncipollo/release-action@v1.6.1
       with:
+        tag: ${{ GITHUB_SHA }}
         artifacts: "*.zip"
         allowUpdates: "true"
         token: ${{ secrets.GITHUB_TOKEN }}
