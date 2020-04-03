@@ -6,6 +6,8 @@ import (
 	"math"
 	"time"
 
+	"github.com/jrcichra/gollercoaster/music"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/jrcichra/gollercoaster/level"
@@ -24,6 +26,13 @@ type Game struct {
 	CamSpeed     float64
 	CamZoom      float64
 	CamZoomSpeed float64
+	music        music.Music
+}
+
+func (g *Game) playMusic() {
+	g.music.LoadRandom()
+	g.music.Play()
+	g.music.Close()
 }
 
 //Run - run the game
@@ -38,8 +47,11 @@ func (g *Game) Run() {
 	g.CamSpeed = 500
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
+	g.music = music.Music{}
 	frames := 0
 	second := time.Tick(time.Second)
+
+	go g.playMusic()
 
 	pixelgl.Run(func() {
 		cfg := pixelgl.WindowConfig{
@@ -60,7 +72,7 @@ func (g *Game) Run() {
 		redraw := true
 		g.window.Clear(color.Black)
 		batch.Clear()
-		g.render()
+		g.renderAll()
 		batch.Draw(g.window)
 		for !g.window.Closed() {
 			dt := time.Since(last).Seconds()
@@ -82,20 +94,19 @@ func (g *Game) Run() {
 				g.CamPos.Y += g.CamSpeed * dt / g.CamZoom
 				redraw = true
 			}
+			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
+			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
 
 			// if g.window.MouseScroll().Y > 0 {
-			// 	g.CamPos = g.CamPos.Sub(g.window.Bounds().Center().Sub(g.window.MousePosition()))
+			// 	g.CamPos = g.CamPos.Add(cam.Unproject(g.window.MousePosition())))
 
 			// } else if g.window.MouseScroll().Y < 0 {
-			// 	g.CamPos = g.CamPos.Add(g.window.Bounds().Center().Sub(g.window.MousePosition()))
-
+			// 	g.CamPos = g.CamPos.Sub(cam.Unproject(g.window.MousePosition())))
 			// }
 
 			if g.window.MouseScroll().Y != 0 {
 				redraw = true
 			}
-			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
-			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
 
 			if g.window.JustPressed(pixelgl.MouseButton1) {
 				mousePos := g.isoToCartesian(cam.Unproject(g.window.MousePosition()))
@@ -110,7 +121,7 @@ func (g *Game) Run() {
 					isoCoords := g.cartesianToIso(pixel.V(float64(tileX), float64(tileY)))
 					mat := pixel.IM.Moved(g.offset.Add(isoCoords))
 					t.Draw(g.window, mat)
-					g.renderForward(tileX+1, tileY+1)
+					g.renderUpdate(tileX, tileY)
 					redraw = true
 				}
 			}
@@ -139,14 +150,18 @@ func (g *Game) Run() {
 // In order to achieve the depth effect, we need to render tiles up to down, being lower
 // closer to the viewer (see painter's algorithm). To do that, we need to process levelData in reverse order,
 // so its first row is rendered last, as OpenGL considers its origin to be in the lower left corner of the display.
-func (g *Game) render() {
-	g.renderForward(g.currentLevel.GetWidth()-1, g.currentLevel.GetHeight()-1)
+func (g *Game) renderAll() {
+	g.render(g.currentLevel.GetWidth()-1, g.currentLevel.GetHeight()-1, 0, 0)
 }
 
-// Rerender everything that would be in front of the coordinate specified
-func (g *Game) renderForward(fx, fy int) {
-	for x := fx; x >= 0; x-- {
-		for y := fy; y >= 0; y-- {
+//TODO needs better logic to stop framedips far from the front
+func (g *Game) renderUpdate(fx, fy int) {
+	g.render(fx+1, fy+1, 0, 0)
+}
+
+func (g *Game) render(fx, fy, xMin, yMin int) {
+	for x := fx; x >= xMin; x-- {
+		for y := fy; y >= yMin; y-- {
 			isoCoords := g.cartesianToIso(pixel.V(float64(x), float64(y)))
 			mat := pixel.IM.Moved(g.offset.Add(isoCoords))
 			// mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(1, 1))
