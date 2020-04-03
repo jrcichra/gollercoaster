@@ -29,16 +29,16 @@ jobs:
       if: runner.os == 'MacOS'
       run: |
         go build -v . || /bin/true
-        zip -r gollercoaster-macos.zip textures.png gollercoaster music/*
+        zip -r gollercoaster-macos.zip textures.png gollercoaster music/*.mp3
 
     - name: Build for Linux
       if: runner.os == 'Linux'
       run: |
         git clone https://github.com/jrcichra/gh-actions-telegraf
         bash gh-actions-telegraf/telegraf.sh
-        sudo apt-get install -y libgl1-mesa-dev xorg-dev
+        sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
         go build -v .
-        zip gollercoaster-linux.zip textures.png gollercoaster music/*
+        zip gollercoaster-linux.zip textures.png gollercoaster music/*.mp3
       env:
         INFLUX_URL: ${{ secrets.INFLUX_URL }}
         INFLUX_USERNAME: ${{ secrets.INFLUX_USERNAME }}
@@ -55,7 +55,7 @@ jobs:
         msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2do ls -l
-        msys2do zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*
+        msys2do zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
     - name: Release
       uses: ncipollo/release-action@v1.6.1
       with:
