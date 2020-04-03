@@ -52,9 +52,10 @@ func (m *Music) LoadRandom() {
 
 //Play - plays the loaded song
 func (m *Music) Play() {
+	loop := beep.Loop(-1, m.streamer)
 	speaker.Init(m.format.SampleRate, m.format.SampleRate.N(time.Second/10))
 	done := make(chan bool)
-	ctrl := &beep.Ctrl{Streamer: beep.Seq(m.streamer, beep.Callback(func() {
+	ctrl := &beep.Ctrl{Streamer: beep.Seq(loop, beep.Callback(func() {
 		done <- true
 	})), Paused: false}
 	volume := &effects.Volume{
