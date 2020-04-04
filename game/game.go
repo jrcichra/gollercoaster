@@ -25,6 +25,7 @@ type Game struct {
 	CamZoomSpeed float64
 	music        music.Music
 	op           *ebiten.DrawImageOptions
+	warningcount int
 }
 
 func (g *Game) playMusic() {
@@ -87,7 +88,8 @@ func (g *Game) update(screen *ebiten.Image) error {
 	if ebiten.IsDrawingSkipped() {
 		// When the game is running slowly, the rendering result
 		// will not be adopted.
-		fmt.Println("WARNING: We skipped a frame")
+		g.warningcount++
+		fmt.Printf("WARNING #%d: We skipped a frame\n", g.warningcount)
 		return nil
 	}
 
