@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/jrcichra/gollercoaster/music"
 
 	"github.com/jrcichra/gollercoaster/level"
@@ -68,34 +69,34 @@ func (g *Game) update(screen *ebiten.Image) error {
 	_, sY := ebiten.Wheel()
 	g.CamZoom *= math.Pow(g.CamZoomSpeed, sY)
 
-	// cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(pixel.V(float64(g.currentLevel.GetWidth()/2), float64(g.currentLevel.GetHeight()/2)).Sub(g.CamPos))
-	// var identity ebiten.GeoM
-	// identity.Scale(g.CamPosX,g.CamPosY).Scale(g.CamZoom)
-	// if g.window.MouseScroll().Y > 0 {
-	// 	g.CamPos = g.CamPos.Add(cam.Unproject(g.window.MousePosition())))
+	//Get the cursor position
+	mx, my := ebiten.CursorPosition()
+	//Offset for center
+	fmx := float64(mx) - float64(g.windowWidth)/2.0
+	fmy := float64(my) - float64(g.windowHeight)/2.0
+	// x, y := float64(mx)+float64(g.windowWidth/2.0), float64(my)+float64(g.windowHeight/2.0)
+	//Translate it to game coordinates
+	x, y := (float64(fmx/g.CamZoom) + g.CamPosX), float64(fmy/g.CamZoom)-g.CamPosY
 
-	// } else if g.window.MouseScroll().Y < 0 {
-	// 	g.CamPos = g.CamPos.Sub(cam.Unproject(g.window.MousePosition())))
-	// }
+	//Convert isometric
+	imx, imy := g.isoToCartesian(x, y)
 
-	// if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-	// 	mx, my := ebiten.CursorPosition()
-	// 	mp := pixel.V(float64(mx), float64(my))
-	// 	mousePos := g.isoToCartesian(cam.Unproject(mp))
-	// 	tileX := int((mousePos.X + 1))
-	// 	tileY := int((mousePos.Y + 1))
-	// 	t, err := g.currentLevel.GetTile(tileX, tileY)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	} else {
-	// 		t.Clear()
-	// 		t.Push(g.currentLevel.SS.LeftAngleRoof)
-	// 	}
-	// }
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+
+		tileX := int(imx - 1)
+		tileY := int(imy - 1)
+		t, err := g.currentLevel.GetTile(tileX, tileY)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			t.Clear()
+			t.Push(g.currentLevel.SS.LeftAngleRoof)
+		}
+	}
 
 	//Render the whole thing
 	g.renderAll()
-
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Zoom: %f X: %d, Y: %d", g.CamZoom, int(imx), int(imy)))
 	return nil
 }
 
@@ -141,15 +142,18 @@ func (g *Game) renderUpdate(fx, fy int) {
 }
 
 func (g *Game) render(fx, fy, xMin, yMin int) {
-
 	for x := xMin; x <= fx; x++ {
 		for y := yMin; y <= fy; y++ {
-			xi, yi := g.cartesianToIso(x, y)
+			xi, yi := g.cartesianToIso(float64(x), float64(y))
 			op := &ebiten.DrawImageOptions{}
 			//Translate for isometric
 			op.GeoM.Translate(float64(xi), float64(yi))
-			//Transfer for camera position
+			//Translate for camera position
 			op.GeoM.Translate(-g.CamPosX, g.CamPosY)
+			//Scale for camera zoom
+			op.GeoM.Scale(g.CamZoom, g.CamZoom)
+			//Translate for center of screen offset
+			op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
 			t, err := g.currentLevel.GetTile(x, y)
 			if err != nil {
 				fmt.Println(err)
@@ -160,14 +164,14 @@ func (g *Game) render(fx, fy, xMin, yMin int) {
 	}
 }
 
-func (g *Game) cartesianToIso(x, y int) (int, int) {
-	rx := (x - y) * (g.tileSize / 2)
-	ry := (x + y) * (g.tileSize / 4)
+func (g *Game) cartesianToIso(x, y float64) (float64, float64) {
+	rx := (x - y) * float64(g.tileSize/2)
+	ry := (x + y) * float64(g.tileSize/4)
 	return rx, ry
 }
 
-func (g *Game) isoToCartesian(x, y int) (int, int) {
-	rx := (x/(g.tileSize/2) + y/(g.tileSize/4)) / 2
-	ry := (y/(g.tileSize/4) - (x / (g.tileSize / 2))) / 2
+func (g *Game) isoToCartesian(x, y float64) (float64, float64) {
+	rx := (x/float64(g.tileSize/2) + y/float64(g.tileSize/4)) / 2
+	ry := (y/float64(g.tileSize/4) - (x / float64(g.tileSize/2))) / 2
 	return rx, ry
 }
