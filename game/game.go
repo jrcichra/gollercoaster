@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/jrcichra/gollercoaster/music"
 
 	"github.com/jrcichra/gollercoaster/level"
@@ -96,7 +97,7 @@ func (g *Game) update(screen *ebiten.Image) error {
 		}
 	}
 	g.render()
-	// ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
 
 	return nil
 }
