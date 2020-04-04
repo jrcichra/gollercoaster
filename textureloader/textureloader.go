@@ -12,7 +12,6 @@ import (
 //TextureLoader - loads sprites from a file, just keeps the file managed
 type TextureLoader struct {
 	file    ebitenutil.ReadSeekCloser
-	dump    *ebiten.Image
 	picture *ebiten.Image
 }
 
@@ -33,7 +32,6 @@ func (t *TextureLoader) Open(path string) error {
 
 //GetTexture - returns a sprite from the coordinates on the texture
 func (t *TextureLoader) GetTexture(x, y int) *sprite.Sprite {
-	//I personally want 0,0 to be in the top left corner, not the bottom left
 	img := t.picture.SubImage(image.Rect(x*64, ((y + 1) * 64), (x+1)*64, (y * 64))).(*ebiten.Image)
 	s := &sprite.Sprite{}
 	s.Sprite = img

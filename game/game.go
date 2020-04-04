@@ -24,9 +24,6 @@ type Game struct {
 	CamZoom      float64
 	CamZoomSpeed float64
 	music        music.Music
-	frame        *ebiten.Image
-	screen       *ebiten.Image
-	op           *ebiten.DrawImageOptions
 }
 
 func (g *Game) playMusic() {
@@ -37,7 +34,6 @@ func (g *Game) playMusic() {
 
 // update is called every frame (1/60 [s]).
 func (g *Game) update(screen *ebiten.Image) error {
-	g.screen = screen
 	// fmt.Println("Rendering frame", g.frames)
 	dt := 1.0 / 60
 
@@ -46,6 +42,7 @@ func (g *Game) update(screen *ebiten.Image) error {
 	if ebiten.IsDrawingSkipped() {
 		// When the game is running slowly, the rendering result
 		// will not be adopted.
+		fmt.Println("WARNING: We skipped a frame")
 		return nil
 	}
 
@@ -96,7 +93,7 @@ func (g *Game) update(screen *ebiten.Image) error {
 			t.TempPush(g.currentLevel.SS.Selected)
 		}
 	}
-	g.render()
+	g.render(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
 
 	return nil
@@ -114,14 +111,7 @@ func (g *Game) Run() {
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
 	// g.music = music.Music{}
-	g.op = &ebiten.DrawImageOptions{}
-	f, err := ebiten.NewImage(g.windowWidth, g.windowHeight, ebiten.FilterDefault)
-	if err != nil {
-		panic(err)
-	}
-	g.frame = f
-
-	// go g.playMusic()
+	go g.playMusic()
 
 	//Create a new level
 	var l level.Level
@@ -135,24 +125,25 @@ func (g *Game) Run() {
 
 }
 
-func (g *Game) render() {
+func (g *Game) render(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
 	for x := 0; x <= g.currentLevel.GetWidth()-1; x++ {
 		for y := 0; y <= g.currentLevel.GetHeight()-1; y++ {
 			xi, yi := g.cartesianToIso(float64(x), float64(y))
-			g.op.GeoM.Reset()
+			op.GeoM.Reset()
 			//Translate for isometric
-			g.op.GeoM.Translate(float64(xi), float64(yi))
+			op.GeoM.Translate(float64(xi), float64(yi))
 			//Translate for camera position
-			g.op.GeoM.Translate(-g.CamPosX, g.CamPosY)
+			op.GeoM.Translate(-g.CamPosX, g.CamPosY)
 			//Scale for camera zoom
-			g.op.GeoM.Scale(g.CamZoom, g.CamZoom)
+			op.GeoM.Scale(g.CamZoom, g.CamZoom)
 			//Translate for center of screen offset
-			g.op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
+			op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
 			t, err := g.currentLevel.GetTile(x, y)
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				t.Draw(g.screen, g.op)
+				t.Draw(screen, op)
 			}
 		}
 	}
