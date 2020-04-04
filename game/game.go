@@ -120,6 +120,7 @@ func (g *Game) Run() {
 	g.currentLevel = &l
 	l.Spawn()
 	ebiten.SetMaxTPS(ebiten.UncappedTPS)
+	ebiten.SetVsyncEnabled(false)
 	if err := ebiten.Run(g.update, g.windowWidth, g.windowHeight, 1, g.Name); err != nil {
 		panic(err)
 	}
