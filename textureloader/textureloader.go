@@ -3,14 +3,15 @@ package textureloader
 import (
 	"image"
 	_ "image/png" //support for png inputs
-	"os"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/jrcichra/gollercoaster/sprite"
 )
 
 //TextureLoader - loads sprites from a file, just keeps the file managed
 type TextureLoader struct {
-	file    *os.File
+	file    ebitenutil.ReadSeekCloser
 	dump    *ebiten.Image
 	picture *ebiten.Image
 }
@@ -18,7 +19,7 @@ type TextureLoader struct {
 //Open - open's a file
 func (t *TextureLoader) Open(path string) error {
 	var err error
-	t.file, err = os.Open(path)
+	t.file, err = ebitenutil.OpenFile(path)
 	if err != nil {
 		return err
 	}
@@ -31,9 +32,12 @@ func (t *TextureLoader) Open(path string) error {
 }
 
 //GetTexture - returns a sprite from the coordinates on the texture
-func (t *TextureLoader) GetTexture(x, y int) *ebiten.Image {
+func (t *TextureLoader) GetTexture(x, y int) *sprite.Sprite {
 	//I personally want 0,0 to be in the top left corner, not the bottom left
-	return t.picture.SubImage(image.Rect(x*64, ((y + 1) * 64), (x+1)*64, (y * 64))).(*ebiten.Image)
+	img := t.picture.SubImage(image.Rect(x*64, ((y + 1) * 64), (x+1)*64, (y * 64))).(*ebiten.Image)
+	s := &sprite.Sprite{}
+	s.Sprite = img
+	return s
 }
 
 //Close - close the file for this texture loader

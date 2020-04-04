@@ -2,11 +2,9 @@ package game
 
 import (
 	"fmt"
-	"image/color"
 	"math"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/jrcichra/gollercoaster/music"
 
 	"github.com/jrcichra/gollercoaster/level"
@@ -25,8 +23,9 @@ type Game struct {
 	CamZoom      float64
 	CamZoomSpeed float64
 	music        music.Music
-	frames       int64
+	frame        *ebiten.Image
 	screen       *ebiten.Image
+	op           *ebiten.DrawImageOptions
 }
 
 func (g *Game) playMusic() {
@@ -38,7 +37,6 @@ func (g *Game) playMusic() {
 // update is called every frame (1/60 [s]).
 func (g *Game) update(screen *ebiten.Image) error {
 	g.screen = screen
-	g.frames++
 	// fmt.Println("Rendering frame", g.frames)
 	dt := 1.0 / 60
 
@@ -52,7 +50,7 @@ func (g *Game) update(screen *ebiten.Image) error {
 
 	// Write your game's rendering.
 
-	screen.Fill(color.Black)
+	// screen.Fill(color.Black)
 
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
 		g.CamPosX -= g.CamSpeed * dt / g.CamZoom
@@ -97,10 +95,9 @@ func (g *Game) update(screen *ebiten.Image) error {
 			t.TempPush(g.currentLevel.SS.Selected)
 		}
 	}
+	g.render()
+	// ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
 
-	//Render the whole thing
-	g.renderAll()
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Zoom: %f X: %f, Y: %f", g.CamZoom, imx, imy))
 	return nil
 }
 
@@ -116,7 +113,12 @@ func (g *Game) Run() {
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
 	// g.music = music.Music{}
-	g.frames = 0
+	g.op = &ebiten.DrawImageOptions{}
+	f, err := ebiten.NewImage(g.windowWidth, g.windowHeight, ebiten.FilterDefault)
+	if err != nil {
+		panic(err)
+	}
+	g.frame = f
 
 	// go g.playMusic()
 
@@ -124,45 +126,32 @@ func (g *Game) Run() {
 	var l level.Level
 	g.currentLevel = &l
 	l.Spawn()
-	ebiten.SetMaxTPS(ebiten.UncappedTPS)
-	ebiten.SetVsyncEnabled(false)
+	// ebiten.SetMaxTPS(ebiten.UncappedTPS)
+	// ebiten.SetVsyncEnabled(false)
 	if err := ebiten.Run(g.update, g.windowWidth, g.windowHeight, 1, g.Name); err != nil {
 		panic(err)
 	}
 
 }
 
-// Draw level data tiles to window, from farthest to closest.
-// In order to achieve the depth effect, we need to render tiles up to down, being lower
-// closer to the viewer (see painter's algorithm). To do that, we need to process levelData in reverse order,
-// so its first row is rendered last, as OpenGL considers its origin to be in the lower left corner of the display.
-func (g *Game) renderAll() {
-	g.render(g.currentLevel.GetWidth()-1, g.currentLevel.GetHeight()-1, 0, 0)
-}
-
-//TODO needs better logic to stop framedips far from the front
-func (g *Game) renderUpdate(fx, fy int) {
-	g.render(fx+1, fy+1, 0, 0)
-}
-
-func (g *Game) render(fx, fy, xMin, yMin int) {
-	for x := xMin; x <= fx; x++ {
-		for y := yMin; y <= fy; y++ {
+func (g *Game) render() {
+	for x := 0; x <= g.currentLevel.GetWidth()-1; x++ {
+		for y := 0; y <= g.currentLevel.GetHeight()-1; y++ {
 			xi, yi := g.cartesianToIso(float64(x), float64(y))
-			op := &ebiten.DrawImageOptions{}
+			g.op.GeoM.Reset()
 			//Translate for isometric
-			op.GeoM.Translate(float64(xi), float64(yi))
+			g.op.GeoM.Translate(float64(xi), float64(yi))
 			//Translate for camera position
-			op.GeoM.Translate(-g.CamPosX, g.CamPosY)
+			g.op.GeoM.Translate(-g.CamPosX, g.CamPosY)
 			//Scale for camera zoom
-			op.GeoM.Scale(g.CamZoom, g.CamZoom)
+			g.op.GeoM.Scale(g.CamZoom, g.CamZoom)
 			//Translate for center of screen offset
-			op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
+			g.op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
 			t, err := g.currentLevel.GetTile(x, y)
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				t.Draw(g.screen, op)
+				t.Draw(g.screen, g.op)
 			}
 		}
 	}
