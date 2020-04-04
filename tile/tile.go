@@ -6,7 +6,14 @@ import (
 
 //Tile - basic tile object (made up of many sprites)
 type Tile struct {
-	sprites []*ebiten.Image
+	sprites    []*ebiten.Image
+	temppushes int
+}
+
+//TempPush - push a new sprite on but pop after a draw call
+func (t *Tile) TempPush(s *ebiten.Image) {
+	t.Push(s)
+	t.temppushes++
 }
 
 //Push - push a new sprite on this tile
@@ -36,4 +43,11 @@ func (t *Tile) Draw(win *ebiten.Image, options *ebiten.DrawImageOptions) {
 	for _, s := range t.sprites {
 		win.DrawImage(s, options)
 	}
+
+	//Pop off for every temp push
+	for i := 0; i < t.temppushes; i++ {
+		t.Pop()
+		t.temppushes--
+	}
+
 }

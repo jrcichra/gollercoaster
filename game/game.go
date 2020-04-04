@@ -78,25 +78,29 @@ func (g *Game) update(screen *ebiten.Image) error {
 	//Translate it to game coordinates
 	x, y := (float64(fmx/g.CamZoom) + g.CamPosX), float64(fmy/g.CamZoom)-g.CamPosY
 
+	//Do a half tile mouse shift because of our perspective
+	x -= .5 * float64(g.tileSize)
+	y -= .5 * float64(g.tileSize)
 	//Convert isometric
 	imx, imy := g.isoToCartesian(x, y)
 
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-
-		tileX := int(imx - 1)
-		tileY := int(imy - 1)
-		t, err := g.currentLevel.GetTile(tileX, tileY)
-		if err != nil {
-			fmt.Println(err)
-		} else {
+	tileX := int(imx)
+	tileY := int(imy)
+	t, err := g.currentLevel.GetTile(tileX, tileY)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			t.Clear()
 			t.Push(g.currentLevel.SS.LeftAngleRoof)
+		} else {
+			t.TempPush(g.currentLevel.SS.Selected)
 		}
 	}
 
 	//Render the whole thing
 	g.renderAll()
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Zoom: %f X: %d, Y: %d", g.CamZoom, int(imx), int(imy)))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Zoom: %f X: %f, Y: %f", g.CamZoom, imx, imy))
 	return nil
 }
 

@@ -11,6 +11,7 @@ type SpriteSet struct {
 	Floor         *ebiten.Image
 	SmallTable    *ebiten.Image
 	LeftAngleRoof *ebiten.Image
+	Selected      *ebiten.Image
 }
 
 //Load - loads all the sprites defined in the SpriteSet
@@ -24,4 +25,5 @@ func (s *SpriteSet) Load() {
 	s.Floor = t.GetTexture(0, 5)
 	s.SmallTable = t.GetTexture(3, 5)
 	s.LeftAngleRoof = t.GetTexture(1, 1)
+	s.Selected = t.GetTexture(0, 7)
 }
