@@ -1,45 +1,27 @@
 package spriteset
 
 import (
-	"github.com/faiface/pixel"
-	"github.com/jrcichra/gollercoaster/sprite"
+	"github.com/hajimehoshi/ebiten"
 	"github.com/jrcichra/gollercoaster/textureloader"
-)
-
-const (
-	TallWall      = iota
-	Floor         = iota
-	SmallTable    = iota
-	LeftAngleRoof = iota
 )
 
 //SpriteSet - collection of sprites that can be stacked in a tile
 type SpriteSet struct {
-	TallWall      *sprite.Sprite
-	Floor         *sprite.Sprite
-	SmallTable    *sprite.Sprite
-	LeftAngleRoof *sprite.Sprite
+	TallWall      *ebiten.Image
+	Floor         *ebiten.Image
+	SmallTable    *ebiten.Image
+	LeftAngleRoof *ebiten.Image
 }
 
 //Load - loads all the sprites defined in the SpriteSet
-func (s *SpriteSet) Load() *pixel.Batch {
+func (s *SpriteSet) Load() {
 	var t textureloader.TextureLoader
-	batch, err := t.Open("textures.png")
+	err := t.Open("textures.png")
 	if err != nil {
 		panic(err)
 	}
-	var tallWall sprite.Sprite
-	tallWall.Sprite = t.GetTexture(0, 0)
-	s.TallWall = &tallWall
-	var floor sprite.Sprite
-	floor.Sprite = t.GetTexture(0, 5)
-	s.Floor = &floor
-	var smallTable sprite.Sprite
-	smallTable.Sprite = t.GetTexture(3, 5)
-	s.SmallTable = &smallTable
-	var leftAngleRoof sprite.Sprite
-	leftAngleRoof.Sprite = t.GetTexture(1, 1)
-	s.LeftAngleRoof = &leftAngleRoof
-	//Return the batch we should write to
-	return batch
+	s.TallWall = t.GetTexture(0, 0)
+	s.Floor = t.GetTexture(0, 5)
+	s.SmallTable = t.GetTexture(3, 5)
+	s.LeftAngleRoof = t.GetTexture(1, 1)
 }

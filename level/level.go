@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/faiface/pixel"
-
 	"github.com/jrcichra/gollercoaster/spriteset"
 	"github.com/jrcichra/gollercoaster/tile"
 )
@@ -38,11 +36,12 @@ func (l *Level) GetHeight() int {
 }
 
 //Spawn - spawns a new level
-func (l *Level) Spawn() *pixel.Batch {
+func (l *Level) Spawn() {
 	//Load in the sprite set
 	var ss spriteset.SpriteSet
 	l.SS = &ss
-	batch := ss.Load()
+	ss.Load()
+
 	// //Floor Tile
 	// var f tile.Tile
 	// f.Append(ss.Floor)
@@ -68,12 +67,7 @@ func (l *Level) Spawn() *pixel.Batch {
 
 	lvl := make([][]tile.Tile, 0) //start with a blank level
 
-	// alpha := 2.
-	// beta := 2.
-	// n := 3
 	rand.Seed(time.Now().UTC().UnixNano())
-	// var seed = rand.Int63n(100)
-	// p := perlin.NewPerlin(alpha, beta, n, seed)
 
 	x := 200
 	y := 200
@@ -82,7 +76,6 @@ func (l *Level) Spawn() *pixel.Batch {
 		row := make([]tile.Tile, 0, x)
 		for j := 0; j < y; j++ {
 			var t tile.Tile
-			t.Batch = batch
 			// val := p.Noise2D(float64(seed)/float64(i+1), float64(seed)/float64(j+1))
 			val := rand.Float64()
 			if val < .3 {
@@ -99,5 +92,4 @@ func (l *Level) Spawn() *pixel.Batch {
 		lvl = append(lvl, row)
 	}
 	l.level = lvl
-	return batch
 }

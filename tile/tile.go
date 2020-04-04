@@ -1,29 +1,26 @@
 package tile
 
 import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-	"github.com/jrcichra/gollercoaster/sprite"
+	"github.com/hajimehoshi/ebiten"
 )
 
 //Tile - basic tile object (made up of many sprites)
 type Tile struct {
-	sprites []*sprite.Sprite
-	Batch   *pixel.Batch //Batch this tile writes to
+	sprites []*ebiten.Image
 }
 
 //Push - push a new sprite on this tile
-func (t *Tile) Push(s *sprite.Sprite) {
+func (t *Tile) Push(s *ebiten.Image) {
 	t.sprites = append(t.sprites, s)
 }
 
 //Clear - clear a sprite's elements (make a new array and let go garbage collect the old one)
 func (t *Tile) Clear() {
-	t.sprites = make([]*sprite.Sprite, 0)
+	t.sprites = make([]*ebiten.Image, 0)
 }
 
 //Pop - Pops the last sprite off the tile - unexpected drawing behavior when you pop off the last
-func (t *Tile) Pop() *sprite.Sprite {
+func (t *Tile) Pop() *ebiten.Image {
 	if len(t.sprites) == 1 {
 		return nil
 	}
@@ -33,10 +30,10 @@ func (t *Tile) Pop() *sprite.Sprite {
 }
 
 //Draw - draws the tile
-func (t *Tile) Draw(win *pixelgl.Window, mat pixel.Matrix) {
+func (t *Tile) Draw(win *ebiten.Image, options *ebiten.DrawImageOptions) {
 	//To draw a tile, you need to render the sprites in order from furthest to closest
 	//Here I'm assuming 0 is furthest and N is closest
 	for _, s := range t.sprites {
-		s.Sprite.Draw(t.Batch, mat)
+		win.DrawImage(s, options)
 	}
 }
