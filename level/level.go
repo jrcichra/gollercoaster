@@ -6,23 +6,21 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/faiface/pixel"
-
 	"github.com/jrcichra/gollercoaster/spriteset"
 	"github.com/jrcichra/gollercoaster/tile"
 )
 
 //Level - all the things a level has to store
 type Level struct {
-	Name  string        // Name of your level
-	level [][]tile.Tile //Map of the level (2D array of tiles)
+	Name  string         // Name of your level
+	level [][]*tile.Tile //Map of the level (2D array of tiles)
 	SS    *spriteset.SpriteSet
 }
 
 //GetTile - get the attributes of this tile
 func (l *Level) GetTile(x, y int) (*tile.Tile, error) {
 	if x >= 0 && y >= 0 && x < l.GetWidth() && y < l.GetHeight() {
-		return &l.level[x][y], nil
+		return l.level[x][y], nil
 	}
 	return nil, errors.New("Tile index out of range: x=" + strconv.Itoa(x) + " y=" + strconv.Itoa(y))
 }
@@ -38,11 +36,12 @@ func (l *Level) GetHeight() int {
 }
 
 //Spawn - spawns a new level
-func (l *Level) Spawn() *pixel.Batch {
+func (l *Level) Spawn() {
 	//Load in the sprite set
 	var ss spriteset.SpriteSet
 	l.SS = &ss
-	batch := ss.Load()
+	ss.Load()
+
 	// //Floor Tile
 	// var f tile.Tile
 	// f.Append(ss.Floor)
@@ -66,24 +65,17 @@ func (l *Level) Spawn() *pixel.Batch {
 	// 	{w, w, w, w, w, w, w}, // And this in the upper right
 	// }
 
-	lvl := make([][]tile.Tile, 0) //start with a blank level
+	lvl := make([][]*tile.Tile, 0) //start with a blank level
 
-	// alpha := 2.
-	// beta := 2.
-	// n := 3
 	rand.Seed(time.Now().UTC().UnixNano())
-	// var seed = rand.Int63n(100)
-	// p := perlin.NewPerlin(alpha, beta, n, seed)
 
 	x := 200
 	y := 200
 
 	for i := 0; i < x; i++ {
-		row := make([]tile.Tile, 0, x)
+		row := make([]*tile.Tile, 0, x)
 		for j := 0; j < y; j++ {
-			var t tile.Tile
-			t.Batch = batch
-			// val := p.Noise2D(float64(seed)/float64(i+1), float64(seed)/float64(j+1))
+			t := &tile.Tile{}
 			val := rand.Float64()
 			if val < .3 {
 				t.Push(ss.TallWall)
@@ -99,5 +91,4 @@ func (l *Level) Spawn() *pixel.Batch {
 		lvl = append(lvl, row)
 	}
 	l.level = lvl
-	return batch
 }

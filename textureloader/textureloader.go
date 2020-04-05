@@ -3,37 +3,39 @@ package textureloader
 import (
 	"image"
 	_ "image/png" //support for png inputs
-	"os"
 
-	"github.com/faiface/pixel"
+	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/jrcichra/gollercoaster/sprite"
 )
 
 //TextureLoader - loads sprites from a file, just keeps the file managed
 type TextureLoader struct {
-	file    *os.File
-	dump    pixel.Picture
-	picture pixel.Picture
+	file    ebitenutil.ReadSeekCloser
+	picture *ebiten.Image
 }
 
 //Open - open's a file
-func (t *TextureLoader) Open(path string) (*pixel.Batch, error) {
+func (t *TextureLoader) Open(path string) error {
 	var err error
-	t.file, err = os.Open(path)
+	t.file, err = ebitenutil.OpenFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	img, _, err := image.Decode(t.file)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	t.picture = pixel.PictureDataFromImage(img)
-	return pixel.NewBatch(&pixel.TrianglesData{}, t.picture), nil
+	t.picture, err = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
+	return err
 }
 
 //GetTexture - returns a sprite from the coordinates on the texture
-func (t *TextureLoader) GetTexture(x, y int) *pixel.Sprite {
-	//I personally want 0,0 to be in the top left corner, not the bottom left
-	return pixel.NewSprite(t.picture, pixel.R(float64(x*64), float64(512-((y+1)*64)), float64((x+1)*64), float64(512-(y*64))))
+func (t *TextureLoader) GetTexture(x, y int) *sprite.Sprite {
+	img := t.picture.SubImage(image.Rect(x*64, ((y + 1) * 64), (x+1)*64, (y * 64))).(*ebiten.Image)
+	s := &sprite.Sprite{}
+	s.Sprite = img
+	return s
 }
 
 //Close - close the file for this texture loader
