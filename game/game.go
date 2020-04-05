@@ -112,7 +112,7 @@ func (g *Game) Run() {
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
 	// g.music = music.Music{}
-	// go g.playMusic()
+	go g.playMusic()
 	g.op = &ebiten.DrawImageOptions{}
 	//Create a new level
 	l := &level.Level{}
