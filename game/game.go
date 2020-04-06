@@ -110,17 +110,15 @@ func (g *Game) update(screen *ebiten.Image) error {
 		return nil
 	}
 
-	// Draw only if we have to
+	// Draw only if we have to (and only draw the visible ones)
 	if g.drawToBuffer {
 		g.buffer.Clear()
 		g.render(g.buffer)
-
 		g.drawToBuffer = false
 	}
+	screen.DrawImage(g.buffer, nil)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
 
-	g.op.GeoM.Reset()
-	screen.DrawImage(g.buffer, g.op)
 	g.lastMousePosX = mx
 	g.lastMousePosY = my
 
@@ -139,7 +137,7 @@ func (g *Game) Run() {
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
 	// g.music = music.Music{}
-	// go g.playMusic()
+	go g.playMusic()
 	g.op = &ebiten.DrawImageOptions{}
 	//Create a new level
 	l := &level.Level{}
@@ -169,12 +167,14 @@ func (g *Game) render(screen *ebiten.Image) {
 			g.op.GeoM.Scale(g.CamZoom, g.CamZoom)
 			//Translate for center of screen offset
 			g.op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
+
 			t, err := g.currentLevel.GetTile(x, y)
 			if err != nil {
 				fmt.Println(err)
 			} else {
 				t.Draw(screen, g.op)
 			}
+
 		}
 	}
 }
