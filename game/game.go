@@ -13,19 +13,23 @@ import (
 
 //Game - Game Object
 type Game struct {
-	Name         string //Name of the game ("gollercoaster for now")
-	windowWidth  int
-	windowHeight int
-	tileSize     int
-	currentLevel *level.Level //pointer to the currentLevel to render
-	CamPosX      float64
-	CamPosY      float64
-	CamSpeed     float64
-	CamZoom      float64
-	CamZoomSpeed float64
-	music        music.Music
-	op           *ebiten.DrawImageOptions
-	warningcount int
+	Name          string //Name of the game ("gollercoaster for now")
+	windowWidth   int
+	windowHeight  int
+	tileSize      int
+	currentLevel  *level.Level //pointer to the currentLevel to render
+	CamPosX       float64
+	CamPosY       float64
+	CamSpeed      float64
+	CamZoom       float64
+	CamZoomSpeed  float64
+	music         music.Music
+	op            *ebiten.DrawImageOptions
+	warningcount  int
+	buffer        *ebiten.Image
+	drawToBuffer  bool
+	lastMousePosX int
+	lastMousePosY int
 }
 
 func (g *Game) playMusic() {
@@ -43,18 +47,26 @@ func (g *Game) update(screen *ebiten.Image) error {
 
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
 		g.CamPosX -= g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
 		g.CamPosX += g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
 		g.CamPosY -= g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
 		g.CamPosY += g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
 	}
 	_, sY := ebiten.Wheel()
 	g.CamZoom *= math.Pow(g.CamZoomSpeed, sY)
+
+	if sY != 0 {
+		g.drawToBuffer = true
+	}
 
 	//Get the cursor position
 	mx, my := ebiten.CursorPosition()
@@ -78,10 +90,15 @@ func (g *Game) update(screen *ebiten.Image) error {
 		fmt.Println(err)
 	} else {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			g.drawToBuffer = true
 			t.Clear()
 			t.Push(g.currentLevel.SS.LeftAngleRoof)
 		} else {
 			t.TempPush(g.currentLevel.SS.Selected)
+		}
+		//See if they moved the mouse
+		if mx != g.lastMousePosX || my != g.lastMousePosY {
+			g.drawToBuffer = true
 		}
 	}
 
@@ -93,9 +110,19 @@ func (g *Game) update(screen *ebiten.Image) error {
 		return nil
 	}
 
-	// Write your game's rendering.
-	g.render(screen)
+	// Draw only if we have to
+	if g.drawToBuffer {
+		g.buffer.Clear()
+		g.render(g.buffer)
+
+		g.drawToBuffer = false
+	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
+
+	g.op.GeoM.Reset()
+	screen.DrawImage(g.buffer, g.op)
+	g.lastMousePosX = mx
+	g.lastMousePosY = my
 
 	return nil
 }
@@ -112,12 +139,14 @@ func (g *Game) Run() {
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
 	// g.music = music.Music{}
-	go g.playMusic()
+	// go g.playMusic()
 	g.op = &ebiten.DrawImageOptions{}
 	//Create a new level
 	l := &level.Level{}
 	g.currentLevel = l
+	g.drawToBuffer = true //Draw the first frame to the screen (this may or may not be set later)
 	l.Spawn()
+	g.buffer, _ = ebiten.NewImage(g.windowWidth, g.windowHeight, ebiten.FilterDefault)
 	// ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	// ebiten.SetVsyncEnabled(false)
 	if err := ebiten.Run(g.update, g.windowWidth, g.windowHeight, 1, g.Name); err != nil {

@@ -6,6 +6,7 @@ require (
 	github.com/faiface/beep v1.0.2
 	github.com/go-gl/glfw v0.0.0-20200222043503-6f7a984d4dc4 // indirect
 	github.com/hajimehoshi/ebiten v1.10.5
+	github.com/hajimehoshi/wasmserve v0.0.0-20200403145926-0e21cc99ec1d // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pkg/errors v0.9.1 // indirect
