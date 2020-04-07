@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,windows-latest,macos-latest]
+        os: [ubuntu-latest,macos-latest]
     steps:
 
     - name: Set up Go 1.14
@@ -31,7 +31,7 @@ jobs:
         go build -v . || /bin/true
         zip -r gollercoaster-macos.zip textures.png gollercoaster music/*.mp3
 
-    - name: Build for Linux
+    - name: Build for Linux & Windows
       if: runner.os == 'Linux'
       run: |
         git clone https://github.com/jrcichra/gh-actions-telegraf
@@ -39,23 +39,12 @@ jobs:
         sudo apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
         go build -v .
         zip gollercoaster-linux.zip textures.png gollercoaster music/*.mp3
+        env GOOS=windows GOARCH=amd64 go build -v .
+        zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
       env:
         INFLUX_URL: ${{ secrets.INFLUX_URL }}
         INFLUX_USERNAME: ${{ secrets.INFLUX_USERNAME }}
         INFLUX_PASSWORD: ${{ secrets.INFLUX_PASSWORD }}
-    - name: msys2 for Windows
-      if: runner.os == 'Windows'
-      uses: numworks/setup-msys2@v1
-
-    - name: Build for Windows
-      if: runner.os == 'Windows'
-      run: |
-        msys2do pacman -Syu --noconfirm
-        msys2do pacman -S --noconfirm --needed zip base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
-        msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
-        msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
-        msys2do ls -l
-        msys2do zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
     - name: Release
       uses: ncipollo/release-action@v1.6.1
       with:

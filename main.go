@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
+	// defer profile.Start().Stop()
 	var g game.Game
 	g.Run()
 }

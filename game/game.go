@@ -2,31 +2,34 @@ package game
 
 import (
 	"fmt"
-	"image/color"
 	"math"
-	"time"
 
+	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/jrcichra/gollercoaster/music"
 
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/jrcichra/gollercoaster/level"
 )
 
 //Game - Game Object
 type Game struct {
-	Name         string //Name of the game ("gollercoaster for now")
-	windowWidth  float64
-	windowHeight float64
-	window       *pixelgl.Window
-	offset       pixel.Vec
-	tileSize     float64
-	currentLevel *level.Level //pointer to the currentLevel to render
-	CamPos       pixel.Vec
-	CamSpeed     float64
-	CamZoom      float64
-	CamZoomSpeed float64
-	music        music.Music
+	Name          string //Name of the game ("gollercoaster for now")
+	windowWidth   int
+	windowHeight  int
+	tileSize      int
+	currentLevel  *level.Level //pointer to the currentLevel to render
+	CamPosX       float64
+	CamPosY       float64
+	CamSpeed      float64
+	CamZoom       float64
+	CamZoomSpeed  float64
+	music         music.Music
+	op            *ebiten.DrawImageOptions
+	warningcount  int
+	buffer        *ebiten.Image
+	drawToBuffer  bool
+	lastMousePosX int
+	lastMousePosY int
 }
 
 func (g *Game) playMusic() {
@@ -35,152 +38,155 @@ func (g *Game) playMusic() {
 	g.music.Close()
 }
 
+// update is called every frame (1/60 [s]).
+func (g *Game) update(screen *ebiten.Image) error {
+	// fmt.Println("Rendering frame", g.frames)
+	dt := 1.0 / 60
+
+	// Write your game's logical update.
+
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
+		g.CamPosX -= g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
+		g.CamPosX += g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
+		g.CamPosY -= g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
+		g.CamPosY += g.CamSpeed * dt / g.CamZoom
+		g.drawToBuffer = true
+	}
+	_, sY := ebiten.Wheel()
+	g.CamZoom *= math.Pow(g.CamZoomSpeed, sY)
+
+	if sY != 0 {
+		g.drawToBuffer = true
+	}
+
+	//Get the cursor position
+	mx, my := ebiten.CursorPosition()
+	//Offset for center
+	fmx := float64(mx) - float64(g.windowWidth)/2.0
+	fmy := float64(my) - float64(g.windowHeight)/2.0
+	// x, y := float64(mx)+float64(g.windowWidth/2.0), float64(my)+float64(g.windowHeight/2.0)
+	//Translate it to game coordinates
+	x, y := (float64(fmx/g.CamZoom) + g.CamPosX), float64(fmy/g.CamZoom)-g.CamPosY
+
+	//Do a half tile mouse shift because of our perspective
+	x -= .5 * float64(g.tileSize)
+	y -= .5 * float64(g.tileSize)
+	//Convert isometric
+	imx, imy := g.isoToCartesian(x, y)
+
+	tileX := int(imx)
+	tileY := int(imy)
+	t, err := g.currentLevel.GetTile(tileX, tileY)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			g.drawToBuffer = true
+			t.Clear()
+			t.Push(g.currentLevel.SS.LeftAngleRoof)
+		} else {
+			t.TempPush(g.currentLevel.SS.Selected)
+		}
+		//See if they moved the mouse
+		if mx != g.lastMousePosX || my != g.lastMousePosY {
+			g.drawToBuffer = true
+		}
+	}
+
+	if ebiten.IsDrawingSkipped() {
+		// When the game is running slowly, the rendering result
+		// will not be adopted.
+		g.warningcount++
+		fmt.Printf("WARNING #%d: We skipped a frame\n", g.warningcount)
+		return nil
+	}
+
+	// Draw only if we have to (and only draw the visible ones)
+	if g.drawToBuffer {
+		g.buffer.Clear()
+		g.render(g.buffer)
+		g.drawToBuffer = false
+	}
+	screen.DrawImage(g.buffer, nil)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS %f, FPS %f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
+
+	g.lastMousePosX = mx
+	g.lastMousePosY = my
+
+	return nil
+}
+
 //Run - run the game
 func (g *Game) Run() {
-	var err error
 	g.Name = "gollercoaster"
 	g.windowWidth = 1280
 	g.windowHeight = 720
-	g.offset = pixel.ZV
 	g.tileSize = 64
-	g.CamPos = pixel.ZV
+	g.CamPosX = 0
+	g.CamPosY = 0
 	g.CamSpeed = 500
 	g.CamZoom = 1
 	g.CamZoomSpeed = 1.2
-	g.music = music.Music{}
-	frames := 0
-	second := time.Tick(time.Second)
-
+	// g.music = music.Music{}
 	go g.playMusic()
-
-	pixelgl.Run(func() {
-		cfg := pixelgl.WindowConfig{
-			Title:  g.Name,
-			Bounds: pixel.R(0, 0, g.windowWidth, g.windowHeight),
-			// VSync:  true,
-		}
-		g.window, err = pixelgl.NewWindow(cfg)
-		if err != nil {
-			panic(err)
-		}
-		//Create a new level
-		var l level.Level
-		g.currentLevel = &l
-		batch := l.Spawn()
-		// g.render()
-		last := time.Now()
-		redraw := true
-		g.window.Clear(color.Black)
-		batch.Clear()
-		g.renderAll()
-		batch.Draw(g.window)
-		for !g.window.Closed() {
-			dt := time.Since(last).Seconds()
-			last = time.Now()
-
-			if g.window.Pressed(pixelgl.KeyLeft) || g.window.Pressed(pixelgl.KeyA) {
-				g.CamPos.X -= g.CamSpeed * dt / g.CamZoom
-				redraw = true
-			}
-			if g.window.Pressed(pixelgl.KeyRight) || g.window.Pressed(pixelgl.KeyD) {
-				g.CamPos.X += g.CamSpeed * dt / g.CamZoom
-				redraw = true
-			}
-			if g.window.Pressed(pixelgl.KeyDown) || g.window.Pressed(pixelgl.KeyS) {
-				g.CamPos.Y -= g.CamSpeed * dt / g.CamZoom
-				redraw = true
-			}
-			if g.window.Pressed(pixelgl.KeyUp) || g.window.Pressed(pixelgl.KeyW) {
-				g.CamPos.Y += g.CamSpeed * dt / g.CamZoom
-				redraw = true
-			}
-			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
-			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
-
-			// if g.window.MouseScroll().Y > 0 {
-			// 	g.CamPos = g.CamPos.Add(cam.Unproject(g.window.MousePosition())))
-
-			// } else if g.window.MouseScroll().Y < 0 {
-			// 	g.CamPos = g.CamPos.Sub(cam.Unproject(g.window.MousePosition())))
-			// }
-
-			if g.window.MouseScroll().Y != 0 {
-				redraw = true
-			}
-
-			if g.window.JustPressed(pixelgl.MouseButton1) {
-				mousePos := g.isoToCartesian(cam.Unproject(g.window.MousePosition()))
-				tileX := int((mousePos.X + 1))
-				tileY := int((mousePos.Y + 1))
-				t, err := g.currentLevel.GetTile(tileX, tileY)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					t.Clear()
-					t.Push(g.currentLevel.SS.LeftAngleRoof)
-					isoCoords := g.cartesianToIso(pixel.V(float64(tileX), float64(tileY)))
-					mat := pixel.IM.Moved(g.offset.Add(isoCoords))
-					t.Draw(g.window, mat)
-					g.renderUpdate(tileX, tileY)
-					redraw = true
-				}
-			}
-
-			g.window.SetMatrix(cam)
-			if redraw {
-				redraw = false
-				g.window.Clear(color.Black)
-				batch.Draw(g.window)
-			}
-
-			g.window.Update()
-			frames++
-			select {
-			case <-second:
-				g.window.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
-				frames = 0
-			default:
-			}
-		}
-	})
+	g.op = &ebiten.DrawImageOptions{}
+	//Create a new level
+	l := &level.Level{}
+	g.currentLevel = l
+	g.drawToBuffer = true //Draw the first frame to the screen (this may or may not be set later)
+	l.Spawn()
+	g.buffer, _ = ebiten.NewImage(g.windowWidth, g.windowHeight, ebiten.FilterDefault)
+	// ebiten.SetMaxTPS(ebiten.UncappedTPS)
+	// ebiten.SetVsyncEnabled(false)
+	if err := ebiten.Run(g.update, g.windowWidth, g.windowHeight, 1, g.Name); err != nil {
+		panic(err)
+	}
 
 }
 
-// Draw level data tiles to window, from farthest to closest.
-// In order to achieve the depth effect, we need to render tiles up to down, being lower
-// closer to the viewer (see painter's algorithm). To do that, we need to process levelData in reverse order,
-// so its first row is rendered last, as OpenGL considers its origin to be in the lower left corner of the display.
-func (g *Game) renderAll() {
-	g.render(g.currentLevel.GetWidth()-1, g.currentLevel.GetHeight()-1, 0, 0)
-}
+func (g *Game) render(screen *ebiten.Image) {
 
-//TODO needs better logic to stop framedips far from the front
-func (g *Game) renderUpdate(fx, fy int) {
-	g.render(fx+1, fy+1, 0, 0)
-}
+	for x := 0; x <= g.currentLevel.GetWidth()-1; x++ {
+		for y := 0; y <= g.currentLevel.GetHeight()-1; y++ {
+			xi, yi := g.cartesianToIso(float64(x), float64(y))
+			g.op.GeoM.Reset()
+			//Translate for isometric
+			g.op.GeoM.Translate(float64(xi), float64(yi))
+			//Translate for camera position
+			g.op.GeoM.Translate(-g.CamPosX, g.CamPosY)
+			//Scale for camera zoom
+			g.op.GeoM.Scale(g.CamZoom, g.CamZoom)
+			//Translate for center of screen offset
+			g.op.GeoM.Translate(float64(g.windowWidth/2.0), float64(g.windowHeight/2.0))
 
-func (g *Game) render(fx, fy, xMin, yMin int) {
-	for x := fx; x >= xMin; x-- {
-		for y := fy; y >= yMin; y-- {
-			isoCoords := g.cartesianToIso(pixel.V(float64(x), float64(y)))
-			mat := pixel.IM.Moved(g.offset.Add(isoCoords))
-			// mat = mat.ScaledXY(g.window.Bounds().Center(), pixel.V(1, 1))
 			t, err := g.currentLevel.GetTile(x, y)
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				t.Draw(g.window, mat)
+				t.Draw(screen, g.op)
 			}
+
 		}
 	}
 }
 
-func (g *Game) cartesianToIso(pt pixel.Vec) pixel.Vec {
-	return pixel.V((pt.X-pt.Y)*(g.tileSize/2), (pt.X+pt.Y)*(g.tileSize/4))
+func (g *Game) cartesianToIso(x, y float64) (float64, float64) {
+	rx := (x - y) * float64(g.tileSize/2)
+	ry := (x + y) * float64(g.tileSize/4)
+	return rx, ry
 }
 
-func (g *Game) isoToCartesian(pt pixel.Vec) pixel.Vec {
-	// x := (pt.X/(g.tileSize/2) + pt.Y/(g.tileSize/4)) / 2
-	// y := (pt.Y/(g.tileSize/4) - (pt.X / (g.tileSize / 2))) / 2
-	return pixel.V((pt.X/(g.tileSize/2)+pt.Y/(g.tileSize/4))/2, (pt.Y/(g.tileSize/4)-(pt.X/(g.tileSize/2)))/2)
+func (g *Game) isoToCartesian(x, y float64) (float64, float64) {
+	rx := (x/float64(g.tileSize/2) + y/float64(g.tileSize/4)) / 2
+	ry := (y/float64(g.tileSize/4) - (x / float64(g.tileSize/2))) / 2
+	return rx, ry
 }

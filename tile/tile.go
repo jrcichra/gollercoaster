@@ -1,15 +1,20 @@
 package tile
 
 import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
+	"github.com/hajimehoshi/ebiten"
 	"github.com/jrcichra/gollercoaster/sprite"
 )
 
 //Tile - basic tile object (made up of many sprites)
 type Tile struct {
-	sprites []*sprite.Sprite
-	Batch   *pixel.Batch //Batch this tile writes to
+	sprites    []*sprite.Sprite
+	temppushes int
+}
+
+//TempPush - push a new sprite on but pop after a draw call
+func (t *Tile) TempPush(s *sprite.Sprite) {
+	t.Push(s)
+	t.temppushes++
 }
 
 //Push - push a new sprite on this tile
@@ -33,10 +38,17 @@ func (t *Tile) Pop() *sprite.Sprite {
 }
 
 //Draw - draws the tile
-func (t *Tile) Draw(win *pixelgl.Window, mat pixel.Matrix) {
+func (t *Tile) Draw(screen *ebiten.Image, options *ebiten.DrawImageOptions) {
 	//To draw a tile, you need to render the sprites in order from furthest to closest
 	//Here I'm assuming 0 is furthest and N is closest
 	for _, s := range t.sprites {
-		s.Sprite.Draw(t.Batch, mat)
+		screen.DrawImage(s.Sprite, options)
 	}
+
+	//Pop off for every temp push
+	for i := 0; i < t.temppushes; i++ {
+		t.Pop()
+		t.temppushes--
+	}
+
 }
