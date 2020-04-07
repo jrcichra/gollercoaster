@@ -57,7 +57,7 @@ func (g *Game) Run() {
 		cfg := pixelgl.WindowConfig{
 			Title:  g.Name,
 			Bounds: pixel.R(0, 0, g.windowWidth, g.windowHeight),
-			// VSync:  true,
+			VSync:  true,
 		}
 		g.window, err = pixelgl.NewWindow(cfg)
 		if err != nil {
@@ -96,13 +96,6 @@ func (g *Game) Run() {
 			}
 			g.CamZoom *= math.Pow(g.CamZoomSpeed, g.window.MouseScroll().Y)
 			cam := pixel.IM.Scaled(g.CamPos, g.CamZoom).Moved(g.window.Bounds().Center().Sub(g.CamPos))
-
-			// if g.window.MouseScroll().Y > 0 {
-			// 	g.CamPos = g.CamPos.Add(cam.Unproject(g.window.MousePosition())))
-
-			// } else if g.window.MouseScroll().Y < 0 {
-			// 	g.CamPos = g.CamPos.Sub(cam.Unproject(g.window.MousePosition())))
-			// }
 
 			if g.window.MouseScroll().Y != 0 {
 				redraw = true
