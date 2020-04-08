@@ -19,6 +19,7 @@ type SpriteSet struct {
 	Floor         *sprite.Sprite
 	SmallTable    *sprite.Sprite
 	LeftAngleRoof *sprite.Sprite
+	DoubleWall    *sprite.Sprite
 }
 
 //Load - loads all the sprites defined in the SpriteSet
@@ -40,6 +41,9 @@ func (s *SpriteSet) Load() *pixel.Batch {
 	var leftAngleRoof sprite.Sprite
 	leftAngleRoof.Sprite = t.GetTexture(1, 1)
 	s.LeftAngleRoof = &leftAngleRoof
+	var doubleWall sprite.Sprite
+	doubleWall.Sprite = t.GetTexture(0, 7)
+	s.DoubleWall = &doubleWall
 	//Return the batch we should write to
 	return batch
 }

@@ -12,6 +12,11 @@ type Tile struct {
 	Batch   *pixel.Batch //Batch this tile writes to
 }
 
+//Peek - look at the top sprite
+func (t *Tile) Peek() *sprite.Sprite {
+	return t.sprites[len(t.sprites)-1]
+}
+
 //Push - push a new sprite on this tile
 func (t *Tile) Push(s *sprite.Sprite) {
 	t.sprites = append(t.sprites, s)
