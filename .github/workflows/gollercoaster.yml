@@ -56,11 +56,8 @@ jobs:
         msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2do ls -l
         msys2do zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
-    - name: Release
-      uses: ncipollo/release-action@v1.6.1
+    - uses: actions/upload-artifact@v2
       with:
-        tag: ${{ github.run_number }}
-        artifacts: "*.zip"
-        allowUpdates: "true"
-        token: ${{ secrets.GITHUB_TOKEN }}
+        name: gollercoaster
+        path: "*.zip"
         
