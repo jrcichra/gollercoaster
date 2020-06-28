@@ -50,12 +50,12 @@ jobs:
     - name: Build for Windows
       if: runner.os == 'Windows'
       run: |
-        msys2do pacman -Syu --noconfirm
-        msys2do pacman -S --noconfirm --needed zip base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
-        msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
-        msys2do /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
-        msys2do ls -l
-        msys2do zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
+        msys2 pacman -Syu --noconfirm
+        msys2 pacman -S --noconfirm --needed zip base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
+        msys2 ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
+        msys2 /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
+        msys2 ls -l
+        msys2 zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
     - uses: actions/upload-artifact@v2
       with:
         name: gollercoaster
