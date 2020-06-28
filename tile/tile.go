@@ -2,7 +2,6 @@ package tile
 
 import (
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/jrcichra/gollercoaster/sprite"
 )
 
@@ -38,10 +37,13 @@ func (t *Tile) Pop() *sprite.Sprite {
 }
 
 //Draw - draws the tile
-func (t *Tile) Draw(win *pixelgl.Window, mat pixel.Matrix) {
+func (t *Tile) Draw(mat pixel.Matrix) int {
 	//To draw a tile, you need to render the sprites in order from furthest to closest
 	//Here I'm assuming 0 is furthest and N is closest
+	c := 0
 	for _, s := range t.sprites {
 		s.Sprite.Draw(t.Batch, mat)
+		c++
 	}
+	return c
 }

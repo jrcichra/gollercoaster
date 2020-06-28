@@ -50,7 +50,7 @@ func (g *Game) newWindow() {
 	cfg := pixelgl.WindowConfig{
 		Title:  g.Name,
 		Bounds: pixel.R(0, 0, g.windowWidth, g.windowHeight),
-		VSync:  true,
+		// VSync:  true,
 	}
 	var err error
 	g.window, err = pixelgl.NewWindow(cfg)
@@ -204,6 +204,7 @@ func (g *Game) renderUpdate(fx, fy int) {
 }
 
 func (g *Game) render(fx, fy, xMin, yMin int) {
+	c := 0
 	for x := fx; x >= xMin; x-- {
 		for y := fy; y >= yMin; y-- {
 			isoCoords := g.cartesianToIso(pixel.V(float64(x), float64(y)))
@@ -213,10 +214,11 @@ func (g *Game) render(fx, fy, xMin, yMin int) {
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				t.Draw(g.window, mat)
+				c += t.Draw(mat)
 			}
 		}
 	}
+	fmt.Println("I drew", c, "things to the batch")
 }
 
 func (g *Game) cartesianToIso(pt pixel.Vec) pixel.Vec {
