@@ -45,13 +45,11 @@ jobs:
         INFLUX_PASSWORD: ${{ secrets.INFLUX_PASSWORD }}
     - name: msys2 for Windows
       if: runner.os == 'Windows'
-      uses: numworks/setup-msys2@v1
+      uses: msys2/setup-msys2@v1
 
     - name: Build for Windows
       if: runner.os == 'Windows'
       run: |
-        msys2do pacman -Sy pacman
-        msys2do pacman -Su
         msys2do pacman -Syu --noconfirm
         msys2do pacman -S --noconfirm --needed zip base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git
         msys2do ls -l /c/hostedtoolcache/windows/go/1.14.1/x64/bin
