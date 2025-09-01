@@ -56,7 +56,7 @@ jobs:
         msys2 /c/hostedtoolcache/windows/go/1.14.1/x64/bin/go build
         msys2 ls -l
         msys2 zip gollercoaster-windows.zip textures.png gollercoaster.exe music/*.mp3
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: gollercoaster
         path: "*.zip"
