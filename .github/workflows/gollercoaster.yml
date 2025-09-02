@@ -45,7 +45,7 @@ jobs:
         INFLUX_PASSWORD: ${{ secrets.INFLUX_PASSWORD }}
     - name: msys2 for Windows
       if: runner.os == 'Windows'
-      uses: msys2/setup-msys2@v1
+      uses: msys2/setup-msys2@v2
 
     - name: Build for Windows
       if: runner.os == 'Windows'
